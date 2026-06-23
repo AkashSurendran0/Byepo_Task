@@ -1,0 +1,38 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "run frontend",
+            "type": "shell",
+            "command": "npm run dev",
+            "options": {
+                "cwd": "frontend"
+            }
+        },
+        {
+            "label": "watch backend",
+            "type": "shell",
+            "command": "npm run watch",
+            "options": {
+                "cwd": "backend"
+            }
+        },
+        {
+            "label": "run backend",
+            "type": "shell",
+            "command": "npm run dev",
+            "options": {
+                "cwd": "backend"
+            }
+        },
+        {
+            "label": "run all services",
+            "dependsOn":[
+                "run frontend",
+                "watch backend",
+                "run backend"
+            ],
+            "dependsOrder": "parallel"
+        }
+    ]
+}
