@@ -138,7 +138,7 @@ Replace `(base-url)` with your backend server URL.
 ### Super Admin Login
 
 ```http
-POST (base-url)/super_admin/login
+GET (base-url)/super_admin/login
 ```
 
 **Static Credentials**
@@ -149,13 +149,13 @@ POST (base-url)/super_admin/login
 ### Admin Login
 
 ```http
-POST (base-url)/admin/login
+GET (base-url)/admin/login
 ```
 
 ### User Login
 
 ```http
-POST (base-url)/user/login
+GET (base-url)/user/login
 ```
 
 ---
