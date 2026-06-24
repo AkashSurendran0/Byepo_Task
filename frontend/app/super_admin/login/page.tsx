@@ -4,6 +4,7 @@ import axios from "axios";
 import React, { useState } from "react";
 import { useSnackbar } from "notistack";
 import { useRouter } from "next/navigation";
+import { isValidToken } from "@/app/utils/auth";
 
 export default function LoginPage() {
     const router = useRouter();
@@ -12,6 +13,12 @@ export default function LoginPage() {
         email:'',
         password:''
     })
+
+    React.useEffect(() => {
+        if (isValidToken('superAdminToken', 'super_admin')) {
+            router.replace('/super_admin/organisations')
+        }
+    }, [router])
 
     const changeForm = (e: React.ChangeEvent<HTMLInputElement>) => {
         const {name, value}=e.target
@@ -24,7 +31,8 @@ export default function LoginPage() {
     const submitForm = async () => {
         
         try {
-            await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_ROUTE}/super-admin/login`, loginDetails)
+            const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_ROUTE}/super-admin/login`, loginDetails)
+            localStorage.setItem('superAdminToken', response.data.token)
             enqueueSnackbar('Login successful', {variant:'success'})
             router.push('/super_admin/organisations')
         } catch (error) {
@@ -56,7 +64,7 @@ export default function LoginPage() {
                 <input
                     type="email"
                     name="email"
-                    // value={loginDetails.email}
+                    value={loginDetails.email}
                     onChange={(e)=>changeForm(e)}
                     placeholder="Enter your email"
                     className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-black"
@@ -69,7 +77,7 @@ export default function LoginPage() {
                     Password
                 </label>
                 <input
-                    // value={loginDetails.password}
+                    value={loginDetails.password}
                     name="password"
                     onChange={(e)=>changeForm(e)}
                     type="password"

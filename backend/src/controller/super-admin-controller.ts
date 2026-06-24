@@ -3,11 +3,13 @@ import { inject } from "inversify";
 import { TYPES } from "../TYPES";
 import { IValidateLogin } from "../domain/use-case/super-admin-usecase";
 import jwt from 'jsonwebtoken'
+import { OrganizationController } from "./organization-controller";
 
 export class SuperAdminController {
 
     constructor(
-        @inject(TYPES.IValidateLogin) private _validateLogin: IValidateLogin
+        @inject(TYPES.IValidateLogin) private _validateLogin: IValidateLogin,
+
     ){}
 
 
@@ -19,10 +21,10 @@ export class SuperAdminController {
                 return res.status(401).json({ message: "Invalid credentials" });
             }
 
-            const token = jwt.sign({ email }, process.env.JWT_SECRET!, { expiresIn: '1h' });
+            const token = jwt.sign({ email, role: "super_admin" }, process.env.JWT_SECRET!, { expiresIn: '8h' });
             res.cookie('token', token, { httpOnly: true, secure: true, sameSite: 'strict' });
 
-            res.status(200).json({ message: "Login successful" });
+            res.status(200).json({ message: "Login successful", token });
         } catch (error) {
             res.status(500).json({ message: "Internal server error" });
         }

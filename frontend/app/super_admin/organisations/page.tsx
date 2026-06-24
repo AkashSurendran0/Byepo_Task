@@ -1,9 +1,85 @@
 'use client'
 
-import { useState } from "react";
+import axios from "axios";
+import { useSnackbar } from "notistack";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { isValidToken, logout } from "@/app/utils/auth";
+
+type Organization = {
+    _id: string;
+    name: string;
+    createdAt: string;
+    adminCount: number;
+}
 
 export default function OrganizationsPage() {
+    const router = useRouter()
     const [openModal, setOpenModal]=useState(false)
+    const [organizations, setOrganizations]=useState<Organization[]>([])
+    const [name, setName]=useState('')
+    const [search, setSearch]=useState('')
+    const [loading, setLoading]=useState(true)
+    const { enqueueSnackbar } = useSnackbar()
+
+    const fetchOrganizations = async () => {
+        if (!isValidToken('superAdminToken', 'super_admin')) {
+            router.replace('/super_admin/login')
+            return
+        }
+
+        try {
+            const token = localStorage.getItem('superAdminToken')
+            const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_ROUTE}/super-admin/organizations`, {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+            setOrganizations(response.data.organizations)
+        } catch (error) {
+            if(axios.isAxiosError(error)){
+                enqueueSnackbar(error.response?.data?.message || 'Unable to load organizations', {variant:'error'})
+            }else{
+                enqueueSnackbar('Unable to load organizations', {variant:'error'})
+            }
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    useEffect(() => {
+        if (!isValidToken('superAdminToken', 'super_admin')) {
+            router.replace('/super_admin/login')
+            return
+        }
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        fetchOrganizations()
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [router])
+
+    const filteredOrganizations = useMemo(() => {
+        return organizations.filter((organization) =>
+            organization.name.toLowerCase().includes(search.toLowerCase())
+        )
+    }, [organizations, search])
+
+    const createOrganization = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault()
+        try {
+            const token = localStorage.getItem('superAdminToken')
+            await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_ROUTE}/super-admin/organizations`, { name }, {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+            enqueueSnackbar('Organization created', {variant:'success'})
+            setName('')
+            setOpenModal(false)
+            fetchOrganizations()
+        } catch (error) {
+            if(axios.isAxiosError(error)){
+                enqueueSnackbar(error.response?.data?.message || 'Unable to create organization', {variant:'error'})
+            }else{
+                enqueueSnackbar('Unable to create organization', {variant:'error'})
+            }
+        }
+    }
 
     return (
         <>
@@ -22,7 +98,7 @@ export default function OrganizationsPage() {
                         </div>
 
                         {/* Form */}
-                        <form className="space-y-6">
+                        <form className="space-y-6" onSubmit={createOrganization}>
                         <div>
                             <label className="block text-sm font-medium text-slate-700 mb-2">
                             Organization Name
@@ -30,8 +106,11 @@ export default function OrganizationsPage() {
 
                             <input
                             type="text"
+                            value={name}
+                            onChange={(e)=>setName(e.target.value)}
                             placeholder="Enter organization name"
-                            className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                            className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-black"
+                            required
                             />
                         </div>
 
@@ -39,6 +118,7 @@ export default function OrganizationsPage() {
                         <div className="flex justify-end gap-3">
                             <button
                             type="button"
+                            onClick={()=>setOpenModal(false)}
                             className="px-5 py-3 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 transition"
                             >
                             Cancel
@@ -68,19 +148,29 @@ export default function OrganizationsPage() {
                     </p>
                     </div>
 
-                    <button className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl font-medium transition"
-                    onClick={()=>setOpenModal(prev => !prev)}
-                    >
-                    Add Organization
-                    </button>
+                    <div className="flex gap-3">
+                        <button className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl font-medium transition"
+                        onClick={()=>setOpenModal(prev => !prev)}
+                        >
+                        Add Organization
+                        </button>
+                        <button
+                        className="px-5 py-3 rounded-xl border border-slate-300 text-slate-700 hover:bg-white transition"
+                        onClick={()=>logout('superAdminToken', '/super_admin/login')}
+                        >
+                        Logout
+                        </button>
+                    </div>
                 </div>
 
                 {/* Search */}
                 <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 mb-6">
                     <input
                     type="text"
+                    value={search}
+                    onChange={(e)=>setSearch(e.target.value)}
                     placeholder="Search organizations..."
-                    className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-black"
                     />
                 </div>
 
@@ -95,23 +185,19 @@ export default function OrganizationsPage() {
 
                     {/* Rows */}
                     <div className="divide-y divide-slate-200">
-                    <div className="grid grid-cols-3 px-6 py-5 hover:bg-slate-50 transition">
-                        <span className="font-medium text-slate-900">Netflix</span>
-                        <span className="text-slate-500">23 Jun 2026</span>
-                        <span className="text-slate-500">2</span>
-                    </div>
-
-                    <div className="grid grid-cols-3 px-6 py-5 hover:bg-slate-50 transition">
-                        <span className="font-medium text-slate-900">Amazon</span>
-                        <span className="text-slate-500">22 Jun 2026</span>
-                        <span className="text-slate-500">1</span>
-                    </div>
-
-                    <div className="grid grid-cols-3 px-6 py-5 hover:bg-slate-50 transition">
-                        <span className="font-medium text-slate-900">Swiggy</span>
-                        <span className="text-slate-500">20 Jun 2026</span>
-                        <span className="text-slate-500">3</span>
-                    </div>
+                    {loading && (
+                        <div className="px-6 py-5 text-slate-500">Loading organizations...</div>
+                    )}
+                    {!loading && filteredOrganizations.length === 0 && (
+                        <div className="px-6 py-5 text-slate-500">No organizations found.</div>
+                    )}
+                    {filteredOrganizations.map((organization)=>(
+                        <div key={organization._id} className="grid grid-cols-3 px-6 py-5 hover:bg-slate-50 transition">
+                            <span className="font-medium text-slate-900">{organization.name}</span>
+                            <span className="text-slate-500">{new Date(organization.createdAt).toLocaleDateString()}</span>
+                            <span className="text-slate-500">{organization.adminCount}</span>
+                        </div>
+                    ))}
                     </div>
                 </div>
                 </div>
