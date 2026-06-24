@@ -131,6 +131,53 @@ frontend/
 
 ---
 
+## Authentication Endpoints
+
+Replace `(base-url)` with your backend server URL.
+
+### Super Admin Login
+
+```http
+POST (base-url)/super_admin/login
+```
+
+**Static Credentials**
+
+* Email: `superadmin@gmail.com`
+* Password: `superadmin123`
+
+### Admin Login
+
+```http
+POST (base-url)/admin/login
+```
+
+### User Login
+
+```http
+POST (base-url)/user/login
+```
+
+---
+
+## Environment Variables
+
+### Backend
+
+```env
+PORT=***
+MONGO_ATLAS_URL=***
+JWT_SECRET=***
+```
+
+### Frontend
+
+```env
+NEXT_PUBLIC_BACKEND_ROUTE=http://localhost:5566
+```
+
+---
+
 # Environment Variables
 
 ## Backend
@@ -162,7 +209,7 @@ frontend/.env.local
 Add:
 
 ```env
-NEXT_PUBLIC_BACKEND_ROUTE=http://localhost:5566
+NEXT_PUBLIC_BACKEND_ROUTE=http://localhost:(PORT)
 ```
 
 ---
