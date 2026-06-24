@@ -6,10 +6,10 @@ import jwt from 'jsonwebtoken'
 import { OrganizationController } from "./organization-controller";
 
 export class SuperAdminController {
-    private _organizationController = new OrganizationController();
 
     constructor(
-        @inject(TYPES.IValidateLogin) private _validateLogin: IValidateLogin
+        @inject(TYPES.IValidateLogin) private _validateLogin: IValidateLogin,
+
     ){}
 
 
@@ -29,9 +29,5 @@ export class SuperAdminController {
             res.status(500).json({ message: "Internal server error" });
         }
     }
-
-    createOrganization = this._organizationController.create;
-
-    listOrganizations = this._organizationController.listForSuperAdmin;
 
 }

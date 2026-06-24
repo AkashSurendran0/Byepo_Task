@@ -1,5 +1,21 @@
 export const TYPES = {
     SuperAdminController:'SuperAdminController',
+    AuthController:'AuthController',
+    FeatureFlagController:'FeatureFlagController',
+    OrganizationController:'OrganizationController',
     ISuperAdminRepository:'ISuperAdminRepository',
-    IValidateLogin:'IValidateLogin'
+    IValidateLogin:'IValidateLogin',
+    IUserRepository:'IUserRepository',
+    IOrganizationRepository:'IOrganizationRepository',
+    IListOrganizations:'IListOrganizations',
+    IListOrganizationsForSelection:'IListOrganizationsForSelection',
+    IFeatureFlagRepository:'IFeatureFlagRepository',
+    ISignupUser:'ISignupUser',
+    ILoginUser:'ILoginUser',
+    IListFeatureFlags:'IListFeatureFlags',
+    ICreateFeatureFlag:'ICreateFeatureFlag',
+    IUpdateFeatureFlag:'IUpdateFeatureFlag',
+    IDeleteFeatureFlag:'IDeleteFeatureFlag',
+    ICheckFeatureFlag:'ICheckFeatureFlag',
+    ICreateOrganization:'ICreateOrganization'
 }

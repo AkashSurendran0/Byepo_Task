@@ -1,15 +1,24 @@
 import { Request, Response } from "express";
-import { PipelineStage, Types } from "mongoose";
-import { OrganizationModal } from "../infrastructure/models/organization-model";
+import { inject, injectable } from "inversify";
+import { TYPES } from "../TYPES";
+import {
+    ICreateOrganization,
+    IListOrganizations,
+    IListOrganizationsForSelection,
+} from "../domain/use-case/organization-usecase";
 
+@injectable()
 export class OrganizationController {
+    constructor(
+        @inject(TYPES.ICreateOrganization) private _createOrganization: ICreateOrganization,
+        @inject(TYPES.IListOrganizations) private _listOrganizations: IListOrganizations,
+        @inject(TYPES.IListOrganizationsForSelection) private _listOrganizationsForSelection: IListOrganizationsForSelection
+    ) {}
+
     listForSelection = async (_req: Request, res: Response) => {
         try {
-            const organizations = await OrganizationModal.find()
-                .sort({ createdAt: -1 })
-                .select("_id name createdAt");
-
-            res.status(200).json({ organizations });
+            const result = await this._listOrganizationsForSelection.execute();
+            res.status(result.status).json(result.body);
         } catch (error) {
             res.status(500).json({ message: "Internal server error" });
         }
@@ -17,41 +26,8 @@ export class OrganizationController {
 
     listForSuperAdmin = async (_req: Request, res: Response) => {
         try {
-            const pipeline: PipelineStage[] = [
-                { $sort: { createdAt: -1 } },
-                {
-                    $lookup: {
-                        from: "users",
-                        let: { organizationId: "$_id" },
-                        pipeline: [
-                            {
-                                $match: {
-                                    $expr: {
-                                        $and: [
-                                            { $eq: ["$organization", "$$organizationId"] },
-                                            { $eq: ["$role", "organization_admin"] },
-                                        ],
-                                    },
-                                },
-                            },
-                            { $count: "count" },
-                        ],
-                        as: "adminCounts",
-                    },
-                },
-                {
-                    $project: {
-                        name: 1,
-                        createdAt: 1,
-                        adminCount: {
-                            $ifNull: [{ $arrayElemAt: ["$adminCounts.count", 0] }, 0],
-                        },
-                    },
-                },
-            ];
-
-            const organizations = await OrganizationModal.aggregate(pipeline);
-            res.status(200).json({ organizations });
+            const result = await this._listOrganizations.execute();
+            res.status(result.status).json(result.body);
         } catch (error) {
             res.status(500).json({ message: "Internal server error" });
         }
@@ -59,27 +35,10 @@ export class OrganizationController {
 
     create = async (req: Request, res: Response) => {
         try {
-            const name = String(req.body.name || "").trim();
-            if (!name) {
-                return res.status(400).json({ message: "Organization name is required" });
-            }
-
-            const existing = await OrganizationModal.findOne({
-                name: { $regex: `^${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, $options: "i" },
-            });
-            if (existing) {
-                return res.status(409).json({ message: "Organization already exists" });
-            }
-
-            const organization = await OrganizationModal.create({ name });
-            res.status(201).json({ message: "Organization created", organization });
+            const result = await this._createOrganization.execute(req.body.name);
+            res.status(result.status).json(result.body);
         } catch (error) {
             res.status(500).json({ message: "Internal server error" });
         }
-    };
-
-    findById = async (id: string) => {
-        if (!Types.ObjectId.isValid(id)) return null;
-        return OrganizationModal.findById(id);
     };
 }
