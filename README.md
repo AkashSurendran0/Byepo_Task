@@ -160,24 +160,6 @@ GET (base-url)/user/login
 
 ---
 
-## Environment Variables
-
-### Backend
-
-```env
-PORT=***
-MONGO_ATLAS_URL=***
-JWT_SECRET=***
-```
-
-### Frontend
-
-```env
-NEXT_PUBLIC_BACKEND_ROUTE=http://localhost:5566
-```
-
----
-
 # Environment Variables
 
 ## Backend
